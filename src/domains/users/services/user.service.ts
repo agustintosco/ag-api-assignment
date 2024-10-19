@@ -11,9 +11,7 @@ export class UserService {
 
   async findById(id: number): Promise<User> {
     const user = await this.userModel.findOne({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!user) {
@@ -28,17 +26,19 @@ export class UserService {
   }
 
   async getBalance(id: number): Promise<number> {
-    const { balance } = await this.userModel.findOne({
+    const user = await this.userModel.findOne({
       attributes: ['balance'],
-      where: {
-        id,
-      },
+      where: { id },
     });
 
-    if (!balance) {
+    if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return balance;
+    return user.balance;
+  }
+
+  async bulkCreate(users: Partial<User>[]): Promise<User[]> {
+    return this.userModel.bulkCreate(users);
   }
 }

@@ -12,7 +12,7 @@ import {
   Float,
   GraphQLISODateTime,
 } from '@nestjs/graphql';
-import { User } from 'src/domains/users/models/user.model';
+import { User } from '../../users/models/user.model';
 import sequelize from 'sequelize';
 
 @ObjectType()

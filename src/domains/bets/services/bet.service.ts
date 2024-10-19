@@ -24,7 +24,10 @@ export class BetService {
   }
 
   async findById(id: number): Promise<Bet> {
-    const bet = await this.betModel.findByPk(id);
+    const bet = await this.betModel.findOne({
+      where: { id },
+    });
+
     if (!bet) {
       throw new NotFoundException(`Bet with ID ${id} not found`);
     }
@@ -69,6 +72,7 @@ export class BetService {
       }
 
       user.balance -= betAmount;
+      // service for updating the user balance
 
       const win = Math.random() < chance;
       const payout = win ? betAmount * 2 : 0;
@@ -76,6 +80,7 @@ export class BetService {
 
       if (win) {
         user.balance += payout;
+        // service for updating the user balance
       }
 
       await user.save();

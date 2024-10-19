@@ -6,7 +6,7 @@ import {
   Float,
   GraphQLISODateTime,
 } from '@nestjs/graphql';
-import { Bet } from 'src/domains/bets/models/bet.model';
+import { Bet } from '../../bets/models/bet.model';
 import sequelize from 'sequelize';
 
 @ObjectType()
@@ -32,19 +32,19 @@ export class User extends Model {
 
   @Field(() => [Bet])
   @HasMany(() => Bet)
-  bets: Bet[];
+  bets?: Bet[];
 
   @Field(() => GraphQLISODateTime)
   @Column({
     type: DataType.DATE,
     defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
   })
-  createdAt: Date;
+  createdAt?: Date;
 
   @Field(() => GraphQLISODateTime)
   @Column({
     type: DataType.DATE,
     defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
   })
-  updatedAt: Date;
+  updatedAt?: Date;
 }
