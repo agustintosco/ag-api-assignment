@@ -8,7 +8,13 @@ export class RedisLockService implements OnModuleInit {
   private redlock: Redlock;
 
   onModuleInit() {
-    this.redisClient = new Redis();
+    const redisHost = process.env.REDIS_HOST || 'localhost';
+    const redisPort = Number(process.env.REDIS_PORT) || 6379;
+
+    this.redisClient = new Redis({
+      host: redisHost,
+      port: redisPort,
+    });
 
     this.redlock = new Redlock([this.redisClient], {
       retryCount: 2,
