@@ -169,38 +169,12 @@ Once the server is running, you can access the GraphQL Playground at:
     }
     ```
 
-### Field Resolvers
-
-7. **User.bets**: Retrieves all bets associated with a specific user.
-      - **Arguments**: None
-      - **Returns**: A list of Bet objects.
-
-    Example query:
-    ```graphql
-    query {
-      getUser(id: 1) {
-        id
-        name
-        balance
-        bets {
-          id
-          betAmount
-          win
-          payout
-        }
-      }
-    }
-    ```
-
-
 ## Testing
 - Basic Unit Tests were added for `UserService` and `BetService` to ensure that main logic works correctly.
 - To run the unit tests:
   ```bash
   npm run test
   ```
-
-
 
 ## Notes:
 1. For simplicity no repository separated classes were used.
