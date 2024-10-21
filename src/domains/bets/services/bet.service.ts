@@ -1,29 +1,41 @@
+import Big from 'big.js';
 import {
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { Bet } from '../models/bet.model';
 import { UserService } from '../../users/services/user.service';
-import sequelize from 'sequelize';
-import { RedisLockService } from '../../redis/redis-lock.service';
+import sequelize, { Op, Transaction } from 'sequelize';
+import { RedisLockService } from '../../shared/services/redis-lock.service';
 import { Lock } from 'redlock';
+import { Sequelize } from 'sequelize-typescript';
 
 @Injectable()
 export class BetService {
   constructor(
     @InjectModel(Bet)
     private betModel: typeof Bet,
+    @InjectConnection() private readonly sequelize: Sequelize,
     private userService: UserService,
     private readonly redisLockService: RedisLockService,
   ) {}
 
-  findAll(): Promise<Bet[]> {
-    return this.betModel.findAll();
+  async findAll({
+    limit,
+    offset,
+  }: {
+    limit: number;
+    offset: number;
+  }): Promise<Bet[]> {
+    return this.betModel.findAll({
+      limit,
+      offset,
+    });
   }
 
-  async findById(id: number): Promise<Bet> {
+  async findByIdOrFail(id: number): Promise<Bet> {
     const bet = await this.betModel.findOne({
       where: { id },
     });
@@ -32,6 +44,14 @@ export class BetService {
       throw new NotFoundException(`Bet with ID ${id} not found`);
     }
     return bet;
+  }
+
+  async findByUserIds(userIds: number[]): Promise<Bet[]> {
+    return this.betModel.findAll({
+      where: {
+        userId: userIds,
+      },
+    });
   }
 
   async getBestBetPerUser(limit: number): Promise<Bet[]> {
@@ -46,6 +66,29 @@ export class BetService {
     });
   }
 
+  async findBestBetByUserIds(
+    userIds: number[],
+    limit?: number,
+  ): Promise<Bet[]> {
+    const subquery = `
+    SELECT MAX(payout) 
+    FROM bets 
+    WHERE bets.user_id = "Bet".user_id
+  `;
+
+    return await Bet.findAll({
+      where: {
+        userId: {
+          [Op.in]: userIds,
+        },
+        payout: {
+          [Op.eq]: Sequelize.literal(`(${subquery})`),
+        },
+      },
+      limit,
+    });
+  }
+
   async createBet(
     userId: number,
     betAmount: number,
@@ -53,49 +96,54 @@ export class BetService {
   ): Promise<Bet> {
     const lockKey = `user-lock:${userId}`;
     const ttl = 5000;
-
     let lock: Lock;
+    let transaction: Transaction;
 
     try {
       lock = await this.redisLockService.acquireLock(lockKey, ttl);
+      transaction = await this.sequelize.transaction();
 
-      const user = await this.userService.findById(userId);
+      const user = await this.userService.findByIdOrFail(userId, transaction);
 
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
+      const balance = new Big(
+        await this.userService.getBalance(userId, transaction),
+      );
+      const formattedBetAmount = new Big(betAmount);
 
-      const balance = await this.userService.getBalance(userId);
-
-      if (balance < betAmount) {
+      if (balance.lt(formattedBetAmount)) {
         throw new ConflictException('Insufficient balance');
       }
 
-      user.balance -= betAmount;
-      // service for updating the user balance
+      user.balance = balance.minus(formattedBetAmount).toNumber();
 
       const win = Math.random() < chance;
-      const payout = win ? betAmount * 2 : 0;
-      // define the payout dynamically based on the chance
+      const payout = win ? formattedBetAmount.times(2) : new Big(0);
 
       if (win) {
-        user.balance += payout;
-        // service for updating the user balance
+        user.balance = new Big(user.balance).plus(payout).toNumber();
       }
 
-      await user.save();
+      await user.save({ transaction });
 
-      const bet = await this.betModel.create({
-        userId,
-        betAmount,
-        chance,
-        payout,
-        win,
-      });
+      const bet = await this.betModel.create(
+        {
+          userId,
+          betAmount: formattedBetAmount.toNumber(),
+          chance,
+          payout: payout.toNumber(),
+          win,
+        },
+        { transaction },
+      );
+
+      await transaction.commit();
 
       return bet;
     } catch (error) {
-      console.error('Failed to acquire lock or process bet:', error);
+      if (transaction) {
+        await transaction.rollback();
+      }
+
       throw error;
     } finally {
       if (lock) {
