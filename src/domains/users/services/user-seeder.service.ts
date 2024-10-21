@@ -7,7 +7,7 @@ export class UserSeederService {
   constructor(private readonly userService: UserService) {}
 
   async seedUsers(): Promise<void> {
-    const users = await this.userService.findAll();
+    const users = await this.userService.findAll({ limit: 10, offset: 0 });
 
     if (users.length === 0) {
       const users: Partial<User>[] = [
