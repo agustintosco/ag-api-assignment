@@ -1,0 +1,54 @@
+type Query {
+  getUser(id: ID!): User
+  getUserList(limit: Int, offset: Int): UserList!
+  getBet(id: ID!): Bet
+  getBetList(first: Int, after: String): BetConnection!
+  getBestBetPerUser(limit: Int!): [Bet!]!
+}
+
+type Mutation {
+  createBet(userId: Int!, betAmount: Float!, chance: Float!): Bet
+}
+
+type UserList {
+  users: [User!]!
+  hasNextPage: Boolean!
+}
+
+type User {
+  id: ID!
+  name: String!
+  balance: Float!
+  bets: [Bet]
+  createdAt: Date
+  updatedAt: Date
+}
+
+type Bet {
+  id: ID!
+  userId: Int!
+  betAmount: Float!
+  chance: Float!
+  payout: Float!
+  win: Boolean!
+  user: User!
+  createdAt: Date
+  updatedAt: Date
+}
+
+type BetConnection {
+  edges: [BetEdge!]!
+  pageInfo: PageInfo!
+}
+
+type BetEdge {
+  cursor: String!
+  node: Bet!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+scalar Date
