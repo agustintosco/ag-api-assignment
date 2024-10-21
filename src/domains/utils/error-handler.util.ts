@@ -7,8 +7,6 @@ import { GraphQLError } from 'graphql';
  * @returns
  */
 export function handleGraphQlError(error: any): GraphQLError {
-  console.error('Error stack trace:', error.stack || error);
-
   if (error instanceof NotFoundException) {
     return new GraphQLError(error.message, {
       extensions: {
@@ -27,7 +25,7 @@ export function handleGraphQlError(error: any): GraphQLError {
 
   return new GraphQLError(error.message, {
     extensions: {
-      code: 'INTERNAL_SERVER_ERROR',
+      code: error.extensions?.code || 'INTERNAL_SERVER_ERROR',
     },
   });
 }

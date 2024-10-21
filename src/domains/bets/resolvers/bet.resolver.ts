@@ -15,6 +15,7 @@ import { User } from 'src/domains/users/models/user.model';
 import UserLoaders from 'src/domains/users/services/user.loader';
 import { UserService } from 'src/domains/users/services/user.service';
 import BetLoaders from '../services/bet.loader';
+import { GraphQLError } from 'graphql';
 
 @Resolver(() => Bet)
 export class BetResolver {
@@ -44,6 +45,14 @@ export class BetResolver {
       const offset = after
         ? parseInt(Buffer.from(after, 'base64').toString('ascii'), 10)
         : 0;
+
+      if (isNaN(offset)) {
+        throw new GraphQLError('Invalid cursor', {
+          extensions: {
+            code: 'INVALID_CURSOR',
+          },
+        });
+      }
 
       const bets = await this.betService.findAll({ limit, offset });
 
