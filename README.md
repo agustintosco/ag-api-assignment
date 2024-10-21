@@ -1,86 +1,214 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# Dice Betting API
 
 ## Description
+This project is a dice betting API built as part of the Technical Test at AG for Senior Backend Engineer Position. It allows to place bets and calculates payouts based on a random chance, also query users and bets. The API is built using **NestJS**, **GraphQL**, **TypeScript**, **Sequelize**, and includes **PostgreSQL** for database management and **Redis** for distributed locks.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Technologies Used
+- **TypeScript**
+- **NestJS**
+- **GraphQL**
+- **Sequelize**
+- **PostgreSQL**
+- **Redis**
+- **Docker**
 
-## Project setup
+## Setup Instructions
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/agustintosco/ag-api-assignment
+   ```
 
-```bash
-$ npm install
-```
+2. **Navigate to the project directory**:
+    ``` bash
+    cd dice-betting-api
+    ```
 
-## Compile and run the project
+3. **Run this command**:
 
-```bash
-# development
-$ npm run start
+    This command will set up the app, the PostgreSQL database, and a Redis server.
 
-# watch mode
-$ npm run start:dev
+    ``` bash
+    npm run start:app
+    ```
 
-# production mode
-$ npm run start:prod
-```
+## API Access
+ 
+Once the server is running, you can access the GraphQL Playground at:
 
-## Run tests
+`http://localhost:3000/graphql`
 
-```bash
-# unit tests
-$ npm run test
+## API Documentation
 
-# e2e tests
-$ npm run test:e2e
+### Queries
 
-# test coverage
-$ npm run test:cov
-```
+1. **getBetList**: Retrieves a paginated list of bets.
+   - **Arguments**:
+     - `first` (Int, optional): The number of results to return.
+     - `after` (String, optional): Cursor for pagination.
+   - **Returns**: A `Connection` object with `edges` and `pageInfo` for pagination.
 
-## Resources
+   Example query:
+   ```graphql
+   query {
+     getBetList(first: 10, after: "cursorValue") {
+       edges {
+         node {
+           id
+           betAmount
+           payout
+         }
+       }
+       pageInfo {
+         hasNextPage
+         endCursor
+       }
+     }
+   }
+   ```
 
-Check out a few resources that may come in handy when working with NestJS:
+2. **getBet**: Retrieves a specific bet by its ID.
+   - **Arguments**:
+      - `id` (Int): The ID of the bet.
+   - **Returns**: A Bet object with details of the bet.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+   Example query:
+   ```graphql
+   query {
+     getBet(id: 1) {
+       id
+       betAmount
+       win
+       payout
+       user {
+        name
+       }
+     }
+   }
+   ```
 
-## Support
+3. **getBestBetPerUser**: Retrieves the best bet for each user, with an option to limit the results.
+    - **Arguments**:
+      - `limit` (Int): The maximum number of users to return.
+    - **Returns**: A list of Bet objects representing the best bet for each user.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+    Example query:
+    ```graphql
+    query {
+      getBestBetPerUser(limit: 5) {
+        id
+        payout
+        user {
+         name
+        }
+      }
+    }
+    ```
 
-## Stay in touch
+4. **getUser**: Retrieves a specific user by their ID.
+    - **Arguments**:
+      - `id` (Int): The ID of the user.
+    - **Returns**: A User object.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+    Example query:
+    ```graphql
+    query {
+      getUser(id: 1) {
+        id
+        name
+        balance
+        bets {
+          chance
+          win
+        }
+      }
+    }
+    ```
 
-## License
+5. **getUserList**: Retrieves a paginated list of users.
+    - **Arguments**:
+      - `limit` (Int, optional): The number of users to return (default is 10).
+      - `offset` (Int, optional): The number of users to skip for pagination.
+    - **Returns**: A list of User objects and a boolean indicating if there's a next page.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+    Example query:
+    ```graphql
+    query {
+      getUserList(limit: 10, offset: 0) {
+        users {
+          id
+          name
+          balance
+          bets {
+            payout
+            chance
+          }
+        }
+        hasNextPage
+      }
+    }
+    ```
+
+### Mutations
+
+6. **createBet**: Creates a new bet for a user.
+    - **Arguments**:
+      - `userId` (Int): The ID of the user placing the bet.
+      - `betAmount` (Float): The amount of money being bet.
+      - `chance` (Float): The chance (probability) of winning, passed as a decimal.
+    - **Returns**: The created Bet object.
+
+    Example mutation:
+    ```graphql
+    mutation {
+      createBet(userId: 1, betAmount: 100.0, chance: 0.5) {
+        id
+        betAmount
+        win
+        payout
+      }
+    }
+    ```
+
+### Field Resolvers
+
+7. **User.bets**: Retrieves all bets associated with a specific user.
+      - **Arguments**: None
+      - **Returns**: A list of Bet objects.
+
+    Example query:
+    ```graphql
+    query {
+      getUser(id: 1) {
+        id
+        name
+        balance
+        bets {
+          id
+          betAmount
+          win
+          payout
+        }
+      }
+    }
+    ```
+
+
+## Testing
+- Basic Unit Tests were added for `UserService` and `BetService` to ensure that main logic works correctly.
+- To run the unit tests:
+  ```bash
+  npm run test
+  ```
+
+
+
+## Notes:
+1. For simplicity no repository separated classes were used.
+2. Basic error mapping for covering possible errors.
+
+## Future Improvements
+- Add integration and end-to-end tests.
+- Implement user authentication and authorization to restrict access to the API.
+- Add advanced error handling and custom error messages for better user experience.
+- Add filtering and sorting to list Queries.
+- Include global logger.
