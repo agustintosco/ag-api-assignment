@@ -22,6 +22,12 @@ export class BetService {
     private readonly redisLockService: RedisLockService,
   ) {}
 
+  /**
+   * Retrieves a paginated list of bets.
+   * @param limit - The maximum number of bets to return.
+   * @param offset - The number of bets to skip for pagination.
+   * @returns An array of Bet objects.
+   */
   async findAll({
     limit,
     offset,
@@ -35,6 +41,12 @@ export class BetService {
     });
   }
 
+  /**
+   * Retrieves a specific bet by its ID or throws a NotFoundException if the bet is not found.
+   * @param id - The ID of the bet to retrieve.
+   * @returns The Bet object if found.
+   * @throws {NotFoundException} if the bet with the given ID is not found.
+   */
   async findByIdOrFail(id: number): Promise<Bet> {
     const bet = await this.betModel.findOne({
       where: { id },
@@ -46,6 +58,11 @@ export class BetService {
     return bet;
   }
 
+  /**
+   * Retrieves all bets associated with the specified user IDs.
+   * @param userIds - An array of user IDs whose bets are to be retrieved.
+   * @returns An array of Bet objects associated with the provided user IDs.
+   */
   async findByUserIds(userIds: number[]): Promise<Bet[]> {
     return this.betModel.findAll({
       where: {
@@ -54,22 +71,12 @@ export class BetService {
     });
   }
 
-  async getBestBetPerUser(limit: number): Promise<Bet[]> {
-    return this.betModel.findAll({
-      attributes: [
-        'userId',
-        [sequelize.fn('MAX', sequelize.col('payout')), 'payout'],
-      ],
-      limit,
-      group: ['userId'],
-      order: [['payout', 'DESC']],
-    });
-  }
-
-  async findBestBetByUserIds(
-    userIds: number[],
-    limit?: number,
-  ): Promise<Bet[]> {
+  /**
+   * Retrieves the best bet (with the highest payout) for a list of specified user IDs.
+   * @param userIds - An array of user IDs whose best bets are to be retrieved.
+   * @returns An array of Bet objects representing the best bet for each specified user.
+   */
+  async findBestBetByUserIds(userIds: number[]): Promise<Bet[]> {
     const subquery = `
     SELECT MAX(payout) 
     FROM bets 
@@ -85,10 +92,18 @@ export class BetService {
           [Op.eq]: Sequelize.literal(`(${subquery})`),
         },
       },
-      limit,
     });
   }
 
+  /**
+   * Creates a new bet for a user, handles locking and transactions and adjusts the user's balance.
+   * @param userId - The ID of the user placing the bet.
+   * @param betAmount - The amount of money being bet.
+   * @param chance - The probability of winning, passed as a decimal (e.g. 0.5 for 50% chance).
+   * @returns The created Bet object.
+   * @throws {ConflictException} if the user has insufficient balance.
+   * @throws {Error} for any other errors that occur during the process.
+   */
   async createBet(
     userId: number,
     betAmount: number,

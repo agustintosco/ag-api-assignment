@@ -10,7 +10,6 @@ import sequelize from 'sequelize';
 
 @Table({
   tableName: 'bets',
-  timestamps: true,
   underscored: true,
 })
 export class Bet extends Model {

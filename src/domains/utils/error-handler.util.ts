@@ -6,7 +6,7 @@ import { GraphQLError } from 'graphql';
  * @param error
  * @returns
  */
-export function handleError(error: any): GraphQLError {
+export function handleGraphQlError(error: any): GraphQLError {
   console.error('Error stack trace:', error.stack || error);
 
   if (error instanceof NotFoundException) {
