@@ -31,6 +31,10 @@ This project is a dice betting API built as part of the Technical Test at AG for
     npm run start:app
     ```
 
+  - Requirements:
+    - docker
+    - docker-compose
+
 ## API Access
  
 Once the server is running, you can access the GraphQL Playground at:
