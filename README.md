@@ -185,8 +185,9 @@ Once the server is running, you can access the GraphQL Playground at:
 2. Basic error mapping for covering possible errors.
 
 ## Future Improvements
+- Add ORDER BY to cursor-paginated resolvers to ensure correct results.
+- Add filtering and sorting to list Queries.
 - Add integration and end-to-end tests.
 - Implement user authentication and authorization to restrict access to the API.
 - Add advanced error handling and custom error messages for better user experience.
-- Add filtering and sorting to list Queries.
 - Include global logger.
