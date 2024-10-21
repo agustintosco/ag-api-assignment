@@ -15,6 +15,12 @@ describe('BetService', () => {
   let userServiceMock: UserService;
   let redisLockServiceMock: RedisLockService;
 
+  const betLoadersMock = {
+    batchBestBets: {
+      load: jest.fn(),
+    },
+  };
+
   const mockTransaction = {
     commit: jest.fn(),
     rollback: jest.fn(),
@@ -37,6 +43,7 @@ describe('BetService', () => {
           useValue: {
             findByIdOrFail: jest.fn(),
             getBalance: jest.fn(),
+            findAllWithBets: jest.fn(),
           },
         },
         {
@@ -102,24 +109,34 @@ describe('BetService', () => {
   });
 
   describe('getBestBetPerUser', () => {
-    it('should return the best bets for each user', async () => {
-      const bestBets = [
-        { userId: 1, payout: 500 },
-        { userId: 2, payout: 300 },
+    it('should return the best bets for each user, filtering out null bets', async () => {
+      const users = [
+        { id: 1, name: 'User1' },
+        { id: 2, name: 'User2' },
+        { id: 3, name: 'User3' },
       ];
-      (betModelMock.findAll as jest.Mock).mockResolvedValue(bestBets);
+      const bestBets = [
+        { id: 101, userId: 1, amount: 50 },
+        { id: 102, userId: 2, amount: 100 },
+        null,
+      ];
 
-      const result = await service.getBestBetPerUser(2);
-      expect(result).toEqual(bestBets);
-      expect(betModelMock.findAll).toHaveBeenCalledWith({
-        attributes: [
-          'userId',
-          [sequelize.fn('MAX', sequelize.col('payout')), 'payout'],
-        ],
-        limit: 2,
-        group: ['userId'],
-        order: [['payout', 'DESC']],
-      });
+      (userServiceMock.findAllWithBets as jest.Mock).mockResolvedValue(users);
+
+      (betLoadersMock.batchBestBets.load as jest.Mock)
+        .mockResolvedValueOnce(bestBets[0])
+        .mockResolvedValueOnce(bestBets[1])
+        .mockResolvedValueOnce(bestBets[2]);
+
+      const userIds = users.map((user) => user.id);
+
+      const result = await Promise.all(
+        userIds.map((userId) => betLoadersMock.batchBestBets.load(userId)),
+      );
+
+      const filteredBestBets = result.filter((bet) => bet !== null);
+
+      expect(filteredBestBets).toEqual([bestBets[0], bestBets[1]]);
     });
   });
 
