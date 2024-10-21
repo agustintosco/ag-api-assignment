@@ -20,7 +20,7 @@ This project is a dice betting API built as part of the Technical Test at AG for
 
 2. **Navigate to the project directory**:
     ``` bash
-    cd dice-betting-api
+    cd ag-api-assignment
     ```
 
 3. **Run this command**:
